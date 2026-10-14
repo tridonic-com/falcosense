@@ -27,7 +27,8 @@ def _counter_by_name(shape: dict[str, Any], name: str) -> int | None:
     """Return the value of a named entry in a shape's ``counters`` list."""
     for counter in shape.get("counters", []):
         if counter.get("name") == name:
-            return counter.get("value")
+            value: int | None = counter.get("value")
+            return value
     return None
 
 

@@ -55,7 +55,8 @@ class FalcoSenseRestClient:
                 if response.status in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
                     raise FalcoSenseAuthError(f"Unauthorized for {path}")
                 response.raise_for_status()
-                return await response.json()
+                data: dict[str, Any] = await response.json()
+                return data
         except FalcoSenseAuthError:
             raise
         except aiohttp.ClientResponseError as err:

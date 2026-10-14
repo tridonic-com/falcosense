@@ -1,0 +1,13 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Home Assistant integration issues
+    url: https://github.com/home-assistant/core/issues
+    about: >
+      This library backs the Home Assistant FalcoSENSE integration. For issues
+      with the integration itself (setup, entities, behavior in Home Assistant),
+      please report them to Home Assistant Core.
+  - name: Library bug report
+    url: https://github.com/tridonic-com/falcosense/issues/new
+    about: >
+      For bugs or feature requests in the falcosense library itself (REST/MQTT
+      client, parsing), open an issue here.
