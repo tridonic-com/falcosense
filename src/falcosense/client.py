@@ -30,8 +30,11 @@ class FalcoSense:
         self._token = token
         self.state = FalcoSenseState()
         self._rest = FalcoSenseRestClient(host, token, session, verify_ssl=verify_ssl)
-        self._mqtt = FalcoSenseMqttClient(host, token, self.state, self._notify)
+        self._mqtt = FalcoSenseMqttClient(
+            host, token, self.state, self._notify, self._notify_connection
+        )
         self._listeners: list[Callable[[], None]] = []
+        self._connection_listeners: list[Callable[[bool], None]] = []
 
     async def async_validate(self) -> str:
         """Validate connectivity and credentials, returning the device name.
@@ -85,6 +88,24 @@ class FalcoSense:
 
         return remove
 
+    def add_connection_listener(
+        self, callback: Callable[[bool], None]
+    ) -> Callable[[], None]:
+        """Register a listener invoked with the MQTT connection state.
+
+        Returns a function that removes the listener.
+        """
+        self._connection_listeners.append(callback)
+
+        def remove() -> None:
+            self._connection_listeners.remove(callback)
+
+        return remove
+
     def _notify(self) -> None:
         for callback in list(self._listeners):
             callback()
+
+    def _notify_connection(self, connected: bool) -> None:
+        for callback in list(self._connection_listeners):
+            callback(connected)

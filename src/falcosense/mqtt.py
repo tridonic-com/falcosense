@@ -60,6 +60,7 @@ class FalcoSenseMqttClient:
         token: str,
         state: FalcoSenseState,
         on_update: Callable[[], None],
+        on_connection_change: Callable[[bool], None],
         *,
         port: int = DEFAULT_MQTT_PORT,
         identifier: str = "homeassistant-falcosense",
@@ -69,6 +70,7 @@ class FalcoSenseMqttClient:
         self._token = token
         self._state = state
         self._on_update = on_update
+        self._on_connection_change = on_connection_change
         self._port = port
         self._identifier = identifier
         self._task: asyncio.Task[None] | None = None
@@ -100,6 +102,7 @@ class FalcoSenseMqttClient:
                 raise
             except aiomqtt.MqttError as err:
                 self.connected.clear()
+                self._on_connection_change(False)
                 _LOGGER.debug("MQTT connection lost, reconnecting: %s", err)
                 await asyncio.sleep(_RECONNECT_INTERVAL)
 
@@ -120,6 +123,7 @@ class FalcoSenseMqttClient:
             # Annotations (shape geometry) are only published on request.
             await client.publish(TOPIC_GET_ANNOTATIONS, REQUEST_ANNOTATIONS_PAYLOAD)
             self.connected.set()
+            self._on_connection_change(True)
             async for message in client.messages:
                 self._handle_message(str(message.topic), message.payload)
 
