@@ -31,6 +31,10 @@ TOPIC_AREAS_STATUS: Final = "tridonic_indoor/areas_status"
 TOPIC_LINES_STATUS: Final = "tridonic_indoor/lines_status"
 TOPIC_RUNTIME_STATUS: Final = "tridonic_indoor/status"
 TOPIC_SOLUTION_INFO: Final = "edge/solution/info"
+TOPIC_FRAME_DEBUG: Final = "tridonic_indoor/frame_debug"
+TOPIC_ANNOTATIONS: Final = "tridonic_indoor/annotations"
+TOPIC_GET_ANNOTATIONS: Final = "tridonic_indoor/get_annotations"
+REQUEST_ANNOTATIONS_PAYLOAD: Final = "send annotations!"
 
 SUBSCRIBE_TOPICS: Final = (
     TOPIC_ALL_METADATA,
@@ -38,6 +42,8 @@ SUBSCRIBE_TOPICS: Final = (
     TOPIC_LINES_STATUS,
     TOPIC_RUNTIME_STATUS,
     TOPIC_SOLUTION_INFO,
+    TOPIC_FRAME_DEBUG,
+    TOPIC_ANNOTATIONS,
 )
 
 # Metadata block "type" values inside the all_metadata payload.

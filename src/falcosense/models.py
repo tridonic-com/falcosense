@@ -10,6 +10,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+# A point in normalized frame coordinates, each component in roughly 0..1.
+Point = tuple[float, float]
+
 
 @dataclass
 class DeviceInfo:
@@ -66,6 +69,22 @@ class Queue:
 
 
 @dataclass
+class ShapeGeometry:
+    """Drawable geometry for a commissioned shape, in normalized coordinates.
+
+    A line uses ``start`` and ``end``; an area or queue uses ``points``.
+    """
+
+    uid: str
+    label: str
+    color: str
+    is_line: bool
+    start: Point | None = None
+    end: Point | None = None
+    points: list[Point] = field(default_factory=list)
+
+
+@dataclass
 class FalcoSenseState:
     """The full accumulated state of a FalcoSENSE device."""
 
@@ -73,3 +92,7 @@ class FalcoSenseState:
     lines: dict[str, Line] = field(default_factory=dict)
     areas: dict[str, Area] = field(default_factory=dict)
     queues: dict[str, Queue] = field(default_factory=dict)
+    annotations: list[ShapeGeometry] = field(default_factory=list)
+    # Latest debug camera frame (JPEG). Kept out of DeviceInfo so it is not
+    # serialized into diagnostics.
+    camera_frame: bytes | None = None

@@ -8,7 +8,7 @@ from .exceptions import (
     FalcoSenseConnectionError,
     FalcoSenseError,
 )
-from .models import Area, DeviceInfo, FalcoSenseState, Line, Queue
+from .models import Area, DeviceInfo, FalcoSenseState, Line, Queue, ShapeGeometry
 
 __all__ = [
     "Area",
@@ -20,4 +20,5 @@ __all__ = [
     "FalcoSenseState",
     "Line",
     "Queue",
+    "ShapeGeometry",
 ]

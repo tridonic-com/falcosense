@@ -5,6 +5,7 @@ from __future__ import annotations
 from falcosense.models import FalcoSenseState
 from falcosense.parser import (
     apply_all_metadata,
+    apply_annotations,
     apply_areas_status,
     apply_lines_status,
     apply_runtime_status,
@@ -155,6 +156,41 @@ def test_unknown_uid_in_status_is_ignored() -> None:
         },
     )
     assert state.areas == {}
+
+
+def test_annotations_geometry() -> None:
+    """Annotations yield self-contained line and polygon geometry."""
+    state = FalcoSenseState()
+    apply_annotations(
+        state,
+        {
+            "shapes": [
+                {
+                    "type": "line",
+                    "label": "Line 1",
+                    "uid": "line-uid",
+                    "color": {"hex": "#FF9800"},
+                    "start": {"x": 0.1, "y": 0.2},
+                    "end": {"x": 0.3, "y": 0.4},
+                },
+                {
+                    "type": "polygon",
+                    "label": "Area 1",
+                    "uid": "area-uid",
+                    "color": {"hex": "#F44336"},
+                    "points": [{"x": 0.1, "y": 0.1}, {"x": 0.5, "y": 0.5}],
+                },
+            ]
+        },
+    )
+    assert len(state.annotations) == 2
+    line = state.annotations[0]
+    assert line.is_line is True
+    assert (line.start, line.end) == ((0.1, 0.2), (0.3, 0.4))
+    area = state.annotations[1]
+    assert area.is_line is False
+    assert area.points == [(0.1, 0.1), (0.5, 0.5)]
+    assert area.color == "#F44336"
 
 
 def test_device_info_payloads() -> None:

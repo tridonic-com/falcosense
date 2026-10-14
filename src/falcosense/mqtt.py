@@ -18,9 +18,13 @@ import aiomqtt
 from .const import (
     DEFAULT_MQTT_PORT,
     MQTT_WEBSOCKET_PATH,
+    REQUEST_ANNOTATIONS_PAYLOAD,
     SUBSCRIBE_TOPICS,
     TOPIC_ALL_METADATA,
+    TOPIC_ANNOTATIONS,
     TOPIC_AREAS_STATUS,
+    TOPIC_FRAME_DEBUG,
+    TOPIC_GET_ANNOTATIONS,
     TOPIC_LINES_STATUS,
     TOPIC_RUNTIME_STATUS,
     TOPIC_SOLUTION_INFO,
@@ -28,6 +32,7 @@ from .const import (
 from .models import FalcoSenseState
 from .parser import (
     apply_all_metadata,
+    apply_annotations,
     apply_areas_status,
     apply_lines_status,
     apply_runtime_status,
@@ -68,6 +73,7 @@ class FalcoSenseMqttClient:
         self._identifier = identifier
         self._task: asyncio.Task[None] | None = None
         self.connected = asyncio.Event()
+        self.metadata_received = asyncio.Event()
 
     async def async_start(self) -> None:
         """Start the background reconnect loop."""
@@ -111,11 +117,18 @@ class FalcoSenseMqttClient:
         async with client:
             for topic in SUBSCRIBE_TOPICS:
                 await client.subscribe(topic)
+            # Annotations (shape geometry) are only published on request.
+            await client.publish(TOPIC_GET_ANNOTATIONS, REQUEST_ANNOTATIONS_PAYLOAD)
             self.connected.set()
             async for message in client.messages:
                 self._handle_message(str(message.topic), message.payload)
 
     def _handle_message(self, topic: str, payload: object) -> None:
+        if topic == TOPIC_FRAME_DEBUG:
+            # Raw JPEG; read on demand by the camera, so no listener notification.
+            if isinstance(payload, (bytes, bytearray)):
+                self._state.camera_frame = bytes(payload)
+            return
         if not isinstance(payload, (bytes, bytearray, str)):
             return
         try:
@@ -127,6 +140,9 @@ class FalcoSenseMqttClient:
             return
         if topic == TOPIC_ALL_METADATA:
             apply_all_metadata(self._state, data)
+            self.metadata_received.set()
+        elif topic == TOPIC_ANNOTATIONS:
+            apply_annotations(self._state, data)
         elif topic == TOPIC_AREAS_STATUS:
             apply_areas_status(self._state, data)
         elif topic == TOPIC_LINES_STATUS:

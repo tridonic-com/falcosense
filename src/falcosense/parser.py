@@ -20,7 +20,7 @@ from .const import (
     TYPE_PEOPLE_PER_MINUTE,
     TYPE_QUEUE_OCCUPANCY_AND_TIME,
 )
-from .models import Area, FalcoSenseState, Line, Queue
+from .models import Area, FalcoSenseState, Line, Queue, ShapeGeometry
 
 
 def _counter_by_name(shape: dict[str, Any], name: str) -> int | None:
@@ -129,6 +129,37 @@ def apply_lines_status(state: FalcoSenseState, payload: dict[str, Any]) -> None:
                 line.in_alert = _alert(entry)
             elif name == "out_status":
                 line.out_alert = _alert(entry)
+
+
+def _point(entry: dict[str, Any]) -> tuple[float, float]:
+    return (entry["x"], entry["y"])
+
+
+def apply_annotations(state: FalcoSenseState, payload: dict[str, Any]) -> None:
+    """Apply the ``annotations`` payload, replacing the known shape geometry.
+
+    Coordinates are normalized to the camera frame (each component ~0..1). The
+    payload is self-contained (label, color, type), so it does not depend on the
+    metadata shapes having been received yet.
+    """
+    geometry: list[ShapeGeometry] = []
+    for shape in payload.get("shapes", []):
+        is_line = shape.get("type") == "line"
+        item = ShapeGeometry(
+            uid=shape.get("uid", ""),
+            label=shape.get("label", ""),
+            color=shape.get("color", {}).get("hex", "#FFFFFF"),
+            is_line=is_line,
+        )
+        if is_line:
+            if "start" not in shape or "end" not in shape:
+                continue
+            item.start = _point(shape["start"])
+            item.end = _point(shape["end"])
+        else:
+            item.points = [_point(p) for p in shape.get("points", [])]
+        geometry.append(item)
+    state.annotations = geometry
 
 
 def apply_runtime_status(state: FalcoSenseState, payload: dict[str, Any]) -> None:

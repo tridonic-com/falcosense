@@ -59,6 +59,16 @@ class FalcoSense:
             # Keep retrying in the background; metadata will arrive once up.
             pass
 
+    async def async_wait_for_metadata(self) -> None:
+        """Wait for the first consolidated metadata message.
+
+        The device publishes several topics; only ``all_metadata`` carries the
+        commissioned lines, areas and queues. Callers should wait for it before
+        enumerating shapes, wrapping this call in :func:`asyncio.timeout` if a
+        bound is needed.
+        """
+        await self._mqtt.metadata_received.wait()
+
     async def async_disconnect(self) -> None:
         """Stop the MQTT subscription."""
         await self._mqtt.async_stop()
